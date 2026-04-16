@@ -1,0 +1,86 @@
+{
+  "timestamp": "2026-04-16T19:24:01.111282",
+  "total_tests": 13,
+  "passed_tests": 13,
+  "success_rate": 1.0,
+  "results": [
+    {
+      "test": "Health endpoint - MongoDB",
+      "success": true,
+      "details": "",
+      "timestamp": "2026-04-16T19:23:57.681441"
+    },
+    {
+      "test": "Health endpoint - LLM",
+      "success": true,
+      "details": "",
+      "timestamp": "2026-04-16T19:23:57.681452"
+    },
+    {
+      "test": "Health endpoint - Sample App",
+      "success": true,
+      "details": "Status: unhealthy",
+      "timestamp": "2026-04-16T19:23:57.681456"
+    },
+    {
+      "test": "Health endpoint - overall",
+      "success": true,
+      "details": "",
+      "timestamp": "2026-04-16T19:23:57.681459"
+    },
+    {
+      "test": "Scenarios endpoint",
+      "success": true,
+      "details": "Found 4 scenarios",
+      "timestamp": "2026-04-16T19:23:57.822963"
+    },
+    {
+      "test": "Trigger incident",
+      "success": true,
+      "details": "Created incident: a6187d7f-42f3-4339-aa26-a1e7d8a77289",
+      "timestamp": "2026-04-16T19:23:57.978204"
+    },
+    {
+      "test": "Logs endpoint - basic",
+      "success": true,
+      "details": "Found 69 logs",
+      "timestamp": "2026-04-16T19:24:00.101109"
+    },
+    {
+      "test": "Logs endpoint - ERROR filter",
+      "success": true,
+      "details": "Found 36 error logs",
+      "timestamp": "2026-04-16T19:24:00.226674"
+    },
+    {
+      "test": "Log stats endpoint",
+      "success": true,
+      "details": "Total logs: 69",
+      "timestamp": "2026-04-16T19:24:00.469992"
+    },
+    {
+      "test": "Get incidents",
+      "success": true,
+      "details": "Found 2 incidents",
+      "timestamp": "2026-04-16T19:24:00.620657"
+    },
+    {
+      "test": "Resolve incident",
+      "success": true,
+      "details": "",
+      "timestamp": "2026-04-16T19:24:00.817093"
+    },
+    {
+      "test": "Simulator state",
+      "success": true,
+      "details": "Healthy: False",
+      "timestamp": "2026-04-16T19:24:00.985936"
+    },
+    {
+      "test": "Simulator stop",
+      "success": true,
+      "details": "",
+      "timestamp": "2026-04-16T19:24:01.110507"
+    }
+  ]
+}

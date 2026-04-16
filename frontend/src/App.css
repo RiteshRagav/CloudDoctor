@@ -1,34 +1,44 @@
-.App-logo {
-    height: 40vmin;
-    pointer-events: none;
-}
+/* CloudDoctor - Global App Styles */
 
-@media (prefers-reduced-motion: no-preference) {
-    .App-logo {
-        animation: App-logo-spin infinite 20s linear;
-    }
-}
-
-.App-header {
-    background-color: #0f0f10;
+.app-background {
+    position: relative;
     min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    font-size: calc(10px + 2vmin);
-    color: white;
 }
 
-.App-link {
-    color: #61dafb;
+.app-background::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background:
+        radial-gradient(600px circle at 20% 0%, hsla(199, 89%, 52%, 0.08), transparent 55%),
+        radial-gradient(500px circle at 80% 10%, hsla(160, 84%, 42%, 0.05), transparent 60%);
 }
 
-@keyframes App-logo-spin {
-    from {
-        transform: rotate(0deg);
-    }
-    to {
-        transform: rotate(360deg);
-    }
+/* Live streaming indicator */
+@keyframes pulse-dot {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
 }
+
+.animate-pulse-dot {
+    animation: pulse-dot 1.5s ease-in-out infinite;
+}
+
+/* Log line hover effect */
+.log-line:hover {
+    background-color: hsla(var(--secondary), 0.4);
+}
+
+/* Severity badge colors */
+.severity-fatal { color: hsl(var(--status-error)); border-color: hsla(0, 72%, 52%, 0.45); background-color: hsla(0, 72%, 52%, 0.12); }
+.severity-error { color: hsl(var(--status-error)); border-color: hsla(0, 72%, 52%, 0.35); background-color: hsla(0, 72%, 52%, 0.10); }
+.severity-warn { color: hsl(var(--status-warn)); border-color: hsla(38, 92%, 54%, 0.35); background-color: hsla(38, 92%, 54%, 0.10); }
+.severity-info { color: hsl(var(--status-info)); border-color: hsla(199, 89%, 52%, 0.35); background-color: hsla(199, 89%, 52%, 0.10); }
+.severity-debug { color: hsl(var(--status-neutral)); border-color: hsla(215, 18%, 62%, 0.30); background-color: hsla(215, 18%, 62%, 0.10); }
+
+/* Status colors */
+.status-open { color: hsl(var(--status-warn)); }
+.status-diagnosed { color: hsl(var(--status-info)); }
+.status-resolved { color: hsl(var(--status-ok)); }

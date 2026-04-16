@@ -33,19 +33,19 @@
   },
   {
     "content": "Phase 2: Design agent → dark theme guidelines",
-    "status": "in_progress"
+    "status": "completed"
   },
   {
     "content": "Phase 2: Backend full implementation",
-    "status": "pending"
+    "status": "completed"
   },
   {
     "content": "Phase 2: Frontend full implementation (dark theme)",
-    "status": "pending"
+    "status": "completed"
   },
   {
     "content": "Phase 2: End to End Testing using Testing Agent",
-    "status": "pending"
+    "status": "in_progress"
   },
   {
     "content": "Phase 2: All user stories covered in Development and testing",
