@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import "@/App.css";
 import Layout from "@/components/Layout";
@@ -8,6 +9,18 @@ import Reports from "@/pages/Reports";
 import { Toaster } from "@/components/ui/sonner";
 
 function App() {
+  // Remove any dynamically-injected third-party badges
+  useEffect(() => {
+    const remove = () => {
+      const el = document.getElementById("emergent-badge");
+      if (el) el.remove();
+    };
+    remove();
+    const observer = new MutationObserver(remove);
+    observer.observe(document.body, { childList: true, subtree: true });
+    return () => observer.disconnect();
+  }, []);
+
   return (
     <div className="dark">
       <BrowserRouter>
