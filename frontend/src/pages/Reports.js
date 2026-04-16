@@ -125,9 +125,8 @@ export default function Reports() {
         <Select
           value={statusFilter}
           onValueChange={setStatusFilter}
-          data-testid="reports-status-filter-select"
         >
-          <SelectTrigger className="w-[180px] bg-secondary/50">
+          <SelectTrigger data-testid="reports-status-filter-select" className="w-[180px] bg-secondary/50">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>

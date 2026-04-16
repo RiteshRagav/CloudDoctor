@@ -160,7 +160,7 @@ export default function Dashboard() {
               {stopping ? "Stopping..." : "Stop Scenario"}
             </Button>
           )}
-          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+          <Dialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) setSelectedScenario(""); }}>
             <DialogTrigger asChild>
               <Button data-testid="trigger-incident-open-button" className="bg-primary text-primary-foreground hover:brightness-110">
                 <Zap className="w-4 h-4 mr-2" />

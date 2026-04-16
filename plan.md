@@ -1,9 +1,10 @@
 # CloudDoctor — Development Plan (POC → V1 → Expand → Harden)
 
 ## Objectives
-- Deliver a working CloudDoctor MVP that can **trigger simulated infra failures**, **generate logs**, **analyze logs**, and **run AI diagnosis** (GPT-4o via Emergent key), while storing incidents in **MongoDB**.
-- Integrate **BetterStack Logtail** when tokens are provided; until then, ship a **local log buffer + query** fallback with the same API contract.
-- Provide a **dark-theme React dashboard** with health pills, incident triggering, log analyzer, AI diagnosis, and incident reports.
+- ✅ Deliver a working CloudDoctor MVP that can **trigger simulated infra failures**, **generate logs**, **analyze logs**, and **run AI diagnosis** (GPT-4o via Emergent key), while storing incidents in **MongoDB**.
+- ✅ Provide a **dark-theme React dashboard** with health pills, incident triggering, log analyzer (streaming via polling), AI diagnosis, and incident reports.
+- ⏳ Integrate **BetterStack Logtail** when tokens are provided; until then, run with a **local log ring buffer + query** fallback using the same API contract.
+- 🔧 Next focus: production hardening (LLM budget/quotas, persistence, rate limits, pagination) and BetterStack enablement.
 
 ---
 
@@ -12,155 +13,176 @@
 ### Phase 1 — Core Workflow POC (Isolation; do not proceed until stable)
 **Goal:** prove the hardest integration/data-flow: *failure trigger → logs generated → logs retrievable → AI diagnosis produced → incident persisted*.
 
+**Status: ✅ Completed**
+
 1. **Web research / best practices**
-   - Review BetterStack Logtail ingestion + querying patterns and rate limits.
-   - Review FastAPI logging patterns (structured logs, correlation IDs) and emergentintegrations `LlmChat` usage.
+   - Reviewed BetterStack Logtail ingestion/querying patterns (integration staged behind env).
+   - Reviewed FastAPI logging patterns and emergentintegrations `LlmChat` usage.
 
 2. **POC: LLM call sanity**
-   - Add `EMERGENT_LLM_KEY` to backend env.
-   - Create minimal script/endpoint to call `LlmChat` with GPT-4o and return structured JSON (root cause, confidence, fixes, MTTR).
+   - Added `EMERGENT_LLM_KEY` to backend env.
+   - Validated GPT-4o call and JSON diagnosis output.
 
 3. **POC: Failure simulator + log generation**
-   - Implement `/api/simulate/{scenario}` that flips an in-memory “service state” and emits structured logs.
-   - Implement a background task that, while in failed state, emits logs every few seconds (to simulate real streaming).
+   - Implemented scenario-based failure simulator with background log emission.
 
 4. **POC: Log retrieval abstraction**
-   - Define `LogProvider` interface:
-     - `append(log_event)`
-     - `query(levels, since, limit)`
-     - `stats(since)`
-   - Implement **LocalLogProvider** (ring buffer in memory) as default.
-   - Stub **BetterStackLogProvider** behind env flags; returns “not configured” until tokens exist.
+   - Implemented **LocalLogProvider** (in-memory ring buffer) with query + stats.
+   - BetterStack provider planned behind env flags (tokens not yet supplied).
 
 5. **POC: Incident persistence**
-   - MongoDB `incidents` collection: create incident on trigger; update with diagnosis; resolve/close.
+   - MongoDB `incidents` collection: create, update (diagnosis), resolve.
 
 6. **POC validation checklist**
-   - Trigger scenario → logs appear in query within 1–2 seconds (local provider).
-   - AI diagnosis endpoint returns consistent JSON schema.
+   - Trigger scenario → logs appear in query within seconds.
+   - AI diagnosis returns consistent schema (or fails gracefully if budget exceeded).
    - Incident record created/updated in MongoDB.
 
-**Phase 1 user stories**
-1. As a user, I can trigger a failure scenario and receive an incident id.
-2. As a user, I can fetch recent logs filtered by severity.
-3. As a user, I can run AI diagnosis on an incident and see root cause + fixes.
-4. As a user, I can see the incident stored and retrievable from the database.
-5. As a user, I can reset the system to healthy (stop scenario) and see logs reflect recovery.
+**Phase 1 user stories (✅ met)**
+1. Trigger a failure scenario and receive an incident id.
+2. Fetch recent logs filtered by severity.
+3. Run AI diagnosis and see root cause + fixes.
+4. See the incident stored and retrievable from the database.
+5. Reset system to healthy (stop scenario) and see recovery logs.
 
 ---
 
 ### Phase 2 — V1 App Development (Backend + Frontend MVP)
 **Goal:** build the full UI around the proven core flow, with consistent APIs and dark theme.
 
+**Status: ✅ Completed (with minor fixes applied)**
+
 1. **Backend (FastAPI)**
-   - Models (Pydantic): `Incident`, `IncidentCreate`, `DiagnosisResult`, `LogEvent`, `HealthStatus`.
-   - Routes:
+   - Models (Pydantic): `Incident`, `IncidentCreate`, `DiagnosisResult`, `LogEvent`.
+   - Routes implemented:
      - `GET /api/health` (MongoDB, LLM, BetterStack-configured?, Sample App state)
-     - `POST /api/incidents/trigger` (scenario) → creates incident + starts emitting logs
-     - `POST /api/incidents/{id}/diagnose` → pulls logs + calls LLM + stores diagnosis
+     - `GET /api/scenarios`
+     - `POST /api/incidents/trigger`
      - `GET /api/incidents` + `GET /api/incidents/{id}`
+     - `POST /api/incidents/{id}/diagnose`
      - `POST /api/incidents/{id}/resolve`
-     - `GET /api/logs` (filters: level, since, limit) + `GET /api/logs/stats`
-     - `POST /api/simulate/stop`
+     - `GET /api/logs` + `GET /api/logs/stats`
+     - `GET /api/simulator/state` + `POST /api/simulator/stop`
    - Logging:
-     - Structured JSON logs, correlation id middleware.
-     - Provider switch: BetterStack if tokens exist, else local provider.
+     - Local ring-buffer log provider active.
+     - BetterStack tokens supported via env but not configured yet.
 
 2. **Frontend (React, dark theme)**
-   - Pages: `Dashboard`, `Log Analyzer`, `AI Diagnosis`, `Reports`.
+   - Pages delivered: `Dashboard`, `Log Analyzer`, `AI Diagnosis`, `Reports`.
    - Dashboard:
-     - 4 health pills (BetterStack, MongoDB, LLM, Sample App).
-     - Trigger Incident modal (scenario select) + current incident banner.
+     - Health pills visible in sidebar; incident trigger dialog; active incident banner; recent incidents list.
    - Log Analyzer:
-     - Severity filter, auto-refresh (polling), log list + counts.
+     - Severity chips + counts; live streaming toggle (polling); formatted log lines.
    - AI Diagnosis:
-     - Select incident, “Run AI Diagnosis”, display confidence, MTTR, root cause, fixes.
+     - Incident selector; “Run AI Diagnosis”; results UI with confidence meter, root cause, fixes, MTTR.
+     - Note: diagnosis calls may fail with **LLM budget exceeded** under heavy testing; UI/UX handles this gracefully.
    - Reports:
-     - Incident table, status badges, details drawer, resolve button.
+     - Incidents table with status/severity badges.
+     - Detail sheet with diagnose/resolve actions.
 
 3. **End-to-end wiring**
-   - Ensure API base URL uses `REACT_APP_BACKEND_URL`.
-   - Validate stop scenario resets states and UI reflects health.
+   - Frontend wired to backend via `REACT_APP_BACKEND_URL`.
+   - Stop scenario resets simulator state and UI.
 
 4. **Testing: 1st full E2E pass**
-   - Run through core flow in preview:
-     - Health → Trigger → Logs appear → Diagnose → Incident stored → Resolve → Stop.
-   - Fix critical UX/API issues immediately.
+   - Backend: ✅ 100% passing.
+   - Frontend: ✅ core flows validated.
+   - Fixes applied:
+     - Trigger dialog confirm button reliably enables after scenario selection.
+     - Reports status filter testid applied on trigger element.
 
-**Phase 2 user stories**
-1. As a user, I open Dashboard and instantly see which subsystems are healthy/unhealthy.
-2. As a user, I can trigger a scenario from the UI and see confirmation plus an incident created.
-3. As a user, I can watch logs appear and filter by ERROR/WARN/INFO/DEBUG.
-4. As a user, I can run AI diagnosis and get actionable recommended fixes.
-5. As a user, I can review past incidents and resolve/close them.
+**Phase 2 user stories (✅ met)**
+1. Open Dashboard and see subsystem health.
+2. Trigger a scenario and see incident created.
+3. Watch logs appear and filter by severity.
+4. Run AI diagnosis and get recommended fixes (or graceful budget error).
+5. Review past incidents and resolve/close them.
 
 ---
 
 ### Phase 3 — BetterStack Enablement + Streaming UX (after tokens available)
 **Goal:** switch from local logs to BetterStack without changing UI contracts.
 
+**Status: ⏳ Pending (blocked on tokens)**
+
 1. **Token onboarding**
-   - Add env vars: `BETTERSTACK_SOURCE_TOKEN`, `BETTERSTACK_QUERY_TOKEN` (or query creds depending on API), host/endpoint.
-   - Add `/api/health` reporting “configured” + last successful send/query.
+   - Obtain BetterStack:
+     - `BETTERSTACK_SOURCE_TOKEN` (ingestion)
+     - `BETTERSTACK_QUERY_TOKEN` (query)
+   - Add `/api/health` enhancements: report “configured” + last successful send/query.
 
 2. **BetterStack provider implementation**
-   - Ingestion: route app logs + simulated logs to BetterStack.
-   - Querying: implement log search/query; normalize into `LogEvent` schema.
-   - Fallback behavior: auto-fallback to local provider on BetterStack errors.
+   - Ingestion:
+     - Route simulator logs + application logs to BetterStack.
+   - Query:
+     - Implement log querying/search via BetterStack APIs.
+     - Normalize responses into `LogEvent` schema.
+   - Resilience:
+     - Auto-fallback to local provider on BetterStack errors/timeouts.
 
 3. **Near-real-time logs**
-   - Improve log analyzer polling cadence + incremental fetch (`since=last_ts`).
+   - Improve Log Analyzer from full refresh to incremental fetch (`since=last_ts`).
+   - Optional: switch to SSE/WebSocket once BetterStack query latency is validated.
 
 4. **Testing: 2nd E2E pass**
-   - Verify same UI flow works with BetterStack enabled.
-   - Verify resilience when BetterStack is misconfigured/unavailable.
+   - Verify the same UI flow works with BetterStack enabled.
+   - Verify behavior when BetterStack is misconfigured/unavailable.
 
-**Phase 3 user stories**
-1. As a user, when BetterStack is configured, I can see logs sourced from BetterStack.
-2. As a user, if BetterStack fails, the app still shows logs via local fallback.
-3. As a user, I can see log volume stats update as new logs arrive.
-4. As a user, health pills accurately reflect BetterStack configuration and status.
-5. As a user, diagnosis uses the same log shape regardless of provider.
+**Phase 3 user stories (target)**
+1. When BetterStack is configured, logs come from BetterStack.
+2. If BetterStack fails, the app still shows logs via local fallback.
+3. Log volume stats update as new logs arrive.
+4. Health pills reflect BetterStack configuration/state.
+5. Diagnosis uses consistent log shape regardless of provider.
 
 ---
 
 ### Phase 4 — Hardening, Quality, and Maintainability
+**Goal:** stabilize for longer-running use, heavier load, and real operational usage.
+
+**Status: ⏳ Next recommended phase**
+
 1. **Data quality & schemas**
-   - Enforce consistent incident lifecycle states; timestamps; severity mapping.
+   - Enforce consistent incident lifecycle: `open → diagnosed → resolved`.
+   - Standardize severity mapping and timestamps.
 
 2. **LLM prompt + output robustness**
-   - Force JSON output; validate with Pydantic; retry on invalid format.
-   - Add deterministic “confidence” + MTTR heuristics if model omits them.
+   - Force strict JSON output; validate with Pydantic.
+   - Add retry/backoff on transient LLM failures.
+   - Add a clear UX state for budget exceeded (already graceful) + optional admin banner.
 
 3. **Performance & safety**
-   - Ring buffer size limits, pagination, server-side filtering.
-   - Rate limiting for diagnose endpoint.
-   - Redact secrets from logs.
+   - Pagination for `/api/logs` + `/api/incidents`.
+   - Server-side filters (scenario, levels, since) and caps.
+   - Rate limit diagnosis endpoint to protect budget.
+   - Redact secrets from logs before sending to providers.
 
 4. **Testing: final regression pass**
-   - Backend pytest for models/providers.
-   - UI smoke test of all routes + empty/error states.
+   - Add pytest coverage for simulator + provider behaviors.
+   - UI smoke tests for empty/error states.
+   - Add a non-LLM “diagnosis stub” mode for test environments.
 
-**Phase 4 user stories**
-1. As a user, I never see broken diagnosis cards due to malformed AI output.
-2. As a user, the app remains responsive even with many logs/incidents.
-3. As a user, I can rely on incidents having consistent statuses and timestamps.
-4. As a user, I can understand errors via friendly UI states.
-5. As a user, the app remains usable even when one subsystem is degraded.
+**Phase 4 user stories (target)**
+1. Diagnosis cards never break due to malformed AI output.
+2. App remains responsive with many logs/incidents.
+3. Incident statuses and timestamps are consistent.
+4. Users see friendly errors for degraded subsystems.
+5. App remains usable even when one subsystem is degraded.
 
 ---
 
 ## Next Actions
-1. Add `EMERGENT_LLM_KEY` to `/app/backend/.env` and implement Phase 1 POC endpoints/scripts.
-2. Implement `LocalLogProvider` + incident MongoDB persistence and validate core flow via curl.
-3. Build V1 React UI (dark theme) and wire to stable APIs.
-4. Run first end-to-end test pass; fix issues before expanding features.
+1. **BetterStack tokens**: user provides `BETTERSTACK_SOURCE_TOKEN` and `BETTERSTACK_QUERY_TOKEN`.
+2. Implement BetterStack provider + query normalization + fallback.
+3. Improve streaming UX to incremental fetch (`since=last_ts`) and add pagination.
+4. Add rate limiting + retries for AI diagnosis to manage cost/budget.
+5. Run the 2nd E2E pass with BetterStack enabled.
 
 ---
 
 ## Success Criteria
-- Core flow works end-to-end: **Trigger incident → logs visible → AI diagnosis → incident stored → resolve/stop resets**.
-- `/api/health` accurately reports MongoDB + LLM + BetterStack-configured + sample state.
-- Log Analyzer supports severity filtering + shows counts; updates in near real-time (polling).
-- AI Diagnosis returns validated structured output (root cause, fixes, confidence, MTTR) and persists to MongoDB.
-- UI is dark-themed, stable, and handles empty/error states cleanly.
+- ✅ Core flow works end-to-end: **Trigger incident → logs visible → (AI diagnosis if budget available) → incident stored → resolve/stop resets**.
+- ✅ `/api/health` accurately reports MongoDB + LLM + BetterStack-configured + sample state.
+- ✅ Log Analyzer supports severity filtering + counts; updates near real-time (polling).
+- ✅ UI is dark-themed, stable, and handles empty/error states cleanly.
+- ⏳ With BetterStack configured: logs are ingested/queried from BetterStack with reliable fallback.

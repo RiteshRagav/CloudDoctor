@@ -4,35 +4,11 @@
     "status": "completed"
   },
   {
-    "content": "Phase 1: POC - LLM call sanity (OpenAI GPT-4o via Emergent key)",
+    "content": "Phase 1: POC - All core flows validated",
     "status": "completed"
   },
   {
-    "content": "Phase 1: POC - Failure simulator + log generation",
-    "status": "completed"
-  },
-  {
-    "content": "Phase 1: POC - Log retrieval abstraction (LocalLogProvider)",
-    "status": "completed"
-  },
-  {
-    "content": "Phase 1: POC - Incident persistence in MongoDB",
-    "status": "completed"
-  },
-  {
-    "content": "Phase 1: POC - AI diagnosis endpoint (logs → LLM → structured output)",
-    "status": "completed"
-  },
-  {
-    "content": "Phase 1: POC validation - test all core flows with test script",
-    "status": "completed"
-  },
-  {
-    "content": "Phase 1: All user stories covered in POC",
-    "status": "completed"
-  },
-  {
-    "content": "Phase 2: Design agent → dark theme guidelines",
+    "content": "Phase 2: Design agent dark theme guidelines",
     "status": "completed"
   },
   {
@@ -45,10 +21,14 @@
   },
   {
     "content": "Phase 2: End to End Testing using Testing Agent",
-    "status": "in_progress"
+    "status": "completed"
+  },
+  {
+    "content": "Phase 2: Bug fixes from testing (trigger button, reports filter testid)",
+    "status": "completed"
   },
   {
     "content": "Phase 2: All user stories covered in Development and testing",
-    "status": "pending"
+    "status": "completed"
   }
 ]
