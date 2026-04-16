@@ -1,0 +1,54 @@
+[
+  {
+    "content": "Phase 1: Add EMERGENT_LLM_KEY to backend .env",
+    "status": "completed"
+  },
+  {
+    "content": "Phase 1: POC - LLM call sanity (OpenAI GPT-4o via Emergent key)",
+    "status": "completed"
+  },
+  {
+    "content": "Phase 1: POC - Failure simulator + log generation",
+    "status": "completed"
+  },
+  {
+    "content": "Phase 1: POC - Log retrieval abstraction (LocalLogProvider)",
+    "status": "completed"
+  },
+  {
+    "content": "Phase 1: POC - Incident persistence in MongoDB",
+    "status": "completed"
+  },
+  {
+    "content": "Phase 1: POC - AI diagnosis endpoint (logs → LLM → structured output)",
+    "status": "completed"
+  },
+  {
+    "content": "Phase 1: POC validation - test all core flows with test script",
+    "status": "completed"
+  },
+  {
+    "content": "Phase 1: All user stories covered in POC",
+    "status": "completed"
+  },
+  {
+    "content": "Phase 2: Design agent → dark theme guidelines",
+    "status": "in_progress"
+  },
+  {
+    "content": "Phase 2: Backend full implementation",
+    "status": "pending"
+  },
+  {
+    "content": "Phase 2: Frontend full implementation (dark theme)",
+    "status": "pending"
+  },
+  {
+    "content": "Phase 2: End to End Testing using Testing Agent",
+    "status": "pending"
+  },
+  {
+    "content": "Phase 2: All user stories covered in Development and testing",
+    "status": "pending"
+  }
+]
