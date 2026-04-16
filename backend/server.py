@@ -3,6 +3,7 @@ from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
 import os
+import asyncio
 import logging
 from pathlib import Path
 from typing import List, Optional
@@ -15,9 +16,13 @@ from models import (
 from log_provider import log_provider
 from simulator import simulator, SCENARIOS
 from diagnosis import run_diagnosis, check_llm_health
+from betterstack_provider import betterstack_provider
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
+
+# Initialize BetterStack tokens (must be after load_dotenv)
+betterstack_provider.load_tokens()
 
 # MongoDB connection
 mongo_url = os.environ['MONGO_URL']
@@ -79,15 +84,8 @@ async def health_check():
     else:
         health["llm"] = {"status": "error", "message": "EMERGENT_LLM_KEY not configured"}
 
-    # BetterStack
-    bs_source = os.environ.get("BETTERSTACK_SOURCE_TOKEN")
-    bs_query = os.environ.get("BETTERSTACK_QUERY_TOKEN")
-    if bs_source and bs_query:
-        health["betterstack"] = {"status": "connected", "message": "BetterStack tokens configured"}
-    elif bs_source or bs_query:
-        health["betterstack"] = {"status": "warning", "message": "Partial BetterStack configuration"}
-    else:
-        health["betterstack"] = {"status": "not_configured", "message": "Using local log provider (BetterStack tokens not set)"}
+    # BetterStack — real connectivity check
+    health["betterstack"] = await betterstack_provider.check_health()
 
     # Sample App (simulator)
     health["sample_app"] = {
@@ -287,6 +285,12 @@ async def list_scenarios():
     }
 
 
+@api_router.get("/betterstack/stats")
+async def betterstack_stats():
+    """Get BetterStack integration statistics."""
+    return betterstack_provider.get_stats()
+
+
 # Include router
 app.include_router(api_router)
 
@@ -300,7 +304,30 @@ app.add_middleware(
 )
 
 
+_betterstack_task = None
+
+
+@app.on_event("startup")
+async def startup_betterstack():
+    """Start BetterStack background log flushing."""
+    global _betterstack_task
+    if betterstack_provider.is_configured:
+        _betterstack_task = asyncio.create_task(
+            betterstack_provider.start_background_flush(interval=3.0)
+        )
+        logger.info("BetterStack background flush started (every 3s)")
+    else:
+        logger.info("BetterStack not configured — using local logs only")
+
+
 @app.on_event("shutdown")
 async def shutdown_db_client():
+    global _betterstack_task
     simulator.stop()
+    betterstack_provider.stop()
+    # Final flush
+    if betterstack_provider.is_configured:
+        await betterstack_provider.flush()
+    if _betterstack_task:
+        _betterstack_task.cancel()
     client.close()

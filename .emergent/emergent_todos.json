@@ -1,34 +1,26 @@
 [
   {
-    "content": "Phase 1: Add EMERGENT_LLM_KEY to backend .env",
+    "content": "Phase 3: Add BetterStack tokens to .env",
     "status": "completed"
   },
   {
-    "content": "Phase 1: POC - All core flows validated",
+    "content": "Phase 3: Implement BetterStack log ingestion (send logs to Logtail)",
     "status": "completed"
   },
   {
-    "content": "Phase 2: Design agent dark theme guidelines",
+    "content": "Phase 3: Update health check for BetterStack connectivity",
     "status": "completed"
   },
   {
-    "content": "Phase 2: Backend full implementation",
+    "content": "Phase 3: Dual-write logs (local buffer + BetterStack)",
     "status": "completed"
   },
   {
-    "content": "Phase 2: Frontend full implementation (dark theme)",
+    "content": "Phase 3: Test BetterStack integration end-to-end",
     "status": "completed"
   },
   {
-    "content": "Phase 2: End to End Testing using Testing Agent",
-    "status": "completed"
-  },
-  {
-    "content": "Phase 2: Bug fixes from testing (trigger button, reports filter testid)",
-    "status": "completed"
-  },
-  {
-    "content": "Phase 2: All user stories covered in Development and testing",
+    "content": "Phase 3: All user stories verified",
     "status": "completed"
   }
 ]

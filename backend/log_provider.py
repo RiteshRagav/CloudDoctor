@@ -9,15 +9,32 @@ logger = logging.getLogger(__name__)
 
 
 class LocalLogProvider:
-    """In-memory ring buffer log provider with thread safety."""
+    """In-memory ring buffer log provider with thread safety.
+    Also dual-writes to BetterStack when configured."""
 
     def __init__(self, max_size: int = 10000):
         self.logs: deque = deque(maxlen=max_size)
         self._lock = threading.Lock()
+        self._betterstack = None  # lazy import to avoid circular deps
+
+    def _get_betterstack(self):
+        if self._betterstack is None:
+            try:
+                from betterstack_provider import betterstack_provider
+                self._betterstack = betterstack_provider
+            except Exception:
+                self._betterstack = False  # mark as unavailable
+        return self._betterstack if self._betterstack is not False else None
 
     def append(self, log_event: LogEvent):
+        log_dict = log_event.model_dump()
         with self._lock:
-            self.logs.append(log_event.model_dump())
+            self.logs.append(log_dict)
+
+        # Dual-write to BetterStack
+        bs = self._get_betterstack()
+        if bs and bs.is_configured:
+            bs.enqueue(log_dict)
 
     def query(
         self,
